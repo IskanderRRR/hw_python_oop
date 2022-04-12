@@ -11,9 +11,9 @@ class InfoMessage:
     calories: float
 
     def get_message(self) -> str:
-        return f'Тип тренировки: {self.training_type};\
+        return (f'Тип тренировки: {self.training_type};\
  Длительность: {self.duration:.3f} ч.; Дистанция: {self.distance:.3f} км;\
- Ср. скорость: {self.speed:.3f} км/ч; Потрачено ккал: {self.calories:.3f}.'
+ Ср. скорость: {self.speed:.3f} км/ч; Потрачено ккал: {self.calories:.3f}.')
 
 
 @dataclass
@@ -24,22 +24,25 @@ class Training:
     weight: float
     M_IN_KM = 1000
     LEN_STEP = 0.65
-    training_type = ''
+    MIN_K = 60
+    __name__ = str
 
     def get_distance(self) -> float:
         """Получить дистанцию в км."""
-        return (self.action * self.LEN_STEP / self.M_IN_KM)
+        return self.action * self.LEN_STEP / self.M_IN_KM
 
     def get_mean_speed(self) -> float:
         """Получить среднюю скорость движения."""
-        return (self.get_distance() / self.duration)
+        return self.get_distance() / self.duration
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
+        raise NotImplementedError
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
-        return InfoMessage(self.training_type,
+
+        return InfoMessage((self.__class__.__name__),
                            self.duration,
                            self.get_distance(),
                            self.get_mean_speed(),
@@ -49,28 +52,31 @@ class Training:
 @dataclass
 class Running(Training):
     """Тренировка: бег."""
-    C_cal_1 = 18
-    C_cal_2 = 20
-    training_type = 'Running'
+    RUN_K_1 = 18
+    RUN_K_2 = 20
 
     def get_spent_calories(self) -> float:
-        return (self.C_cal_1 * self.get_mean_speed() - self.C_cal_2)\
-            * self.weight / self.M_IN_KM * self.duration * 60
+        return ((self.RUN_K_1 * self.get_mean_speed()
+                - self.RUN_K_2)
+                * self.weight
+                / self.M_IN_KM
+                * self.duration
+                * self.MIN_K)
 
 
 @dataclass
 class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
     height: float
-    C_cal_1 = 0.035
-    C_cal_2 = 0.029
-    training_type = 'SportsWalking'
+    WLK_K_1 = 0.035
+    WLK_K_2 = 0.029
 
     def get_spent_calories(self) -> float:
-        c_1 = self.C_cal_1 * self.weight
+        c_1 = self.WLK_K_1 * self.weight
         c_2 = ((self.get_mean_speed()**2 // self.height)
-               * self.C_cal_2 * self.weight)
-        return ((c_1 + c_2) * self.duration * 60)
+               * self.WLK_K_2
+               * self.weight)
+        return ((c_1 + c_2) * self.duration * self.MIN_K)
 
 
 @dataclass
@@ -79,17 +85,19 @@ class Swimming(Training):
     length_pool: float
     count_pool: float
     LEN_STEP = 1.38
-    K_1 = 1.1
-    K_2 = 2
-    training_type = 'Swimming'
+    SWM_K_1 = 1.1
+    SWM_K_2 = 2
 
     def get_mean_speed(self) -> float:
-        return self.length_pool * self.count_pool\
-            / self.M_IN_KM / self.duration
+        return (self.length_pool
+                * self.count_pool
+                / self.M_IN_KM
+                / self.duration)
 
     def get_spent_calories(self) -> float:
-        return (self.get_mean_speed() + self.K_1)\
-            * self.K_2 * self.weight
+        return ((self.get_mean_speed() + self.SWM_K_1)
+                * self.SWM_K_2
+                * self.weight)
 
 
 def read_package(workout_type: str, data: list) -> Training:
@@ -98,8 +106,11 @@ def read_package(workout_type: str, data: list) -> Training:
         'RUN': Running,
         'SWM': Swimming,
         'WLK': SportsWalking}
-    workout = workout_dict.get(workout_type, 'Неверный тип тренировки')
-    return workout(*data)
+    if workout_type not in workout_dict:
+        raise KeyError('Неверный тип тренировки')
+    if workout_type in workout_dict:
+        workout = workout_dict.get(workout_type)
+        return workout(*data)
 
 
 def main(training: Training) -> None:
