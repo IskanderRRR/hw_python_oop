@@ -11,9 +11,13 @@ class InfoMessage:
     calories: float
 
     def get_message(self) -> str:
-        return (f'Тип тренировки: {self.training_type};\
- Длительность: {self.duration:.3f} ч.; Дистанция: {self.distance:.3f} км;\
- Ср. скорость: {self.speed:.3f} км/ч; Потрачено ккал: {self.calories:.3f}.')
+        return (
+            f'Тип тренировки: {self.training_type}; '
+            f'Длительность: {self.duration:.3f} ч.; '
+            f'Дистанция: {self.distance:.3f} км; '
+            f'Ср. скорость: {self.speed:.3f} км/ч; '
+            f'Потрачено ккал: {self.calories:.3f}.'
+        )
 
 
 @dataclass
@@ -25,7 +29,6 @@ class Training:
     M_IN_KM = 1000
     LEN_STEP = 0.65
     MIN_K = 60
-    __name__ = str
 
     def get_distance(self) -> float:
         """Получить дистанцию в км."""
@@ -107,10 +110,13 @@ def read_package(workout_type: str, data: list) -> Training:
         'SWM': Swimming,
         'WLK': SportsWalking}
     if workout_type not in workout_dict:
-        raise KeyError('Неверный тип тренировки')
-    if workout_type in workout_dict:
-        workout = workout_dict.get(workout_type)
-        return workout(*data)
+        raise KeyError(
+            f'Неверный тип тренировки. '
+            f'Корректные виды тренировок: RUN, SWM, WLK. '
+            f'Выбранный Вами: {workout_type}.'
+        )
+    else:
+        return workout_dict.get(workout_type)(*data)
 
 
 def main(training: Training) -> None:
