@@ -75,11 +75,10 @@ class SportsWalking(Training):
     WLK_K_2 = 0.029
 
     def get_spent_calories(self) -> float:
-        c_1 = self.WLK_K_1 * self.weight
-        c_2 = ((self.get_mean_speed()**2 // self.height)
-               * self.WLK_K_2
-               * self.weight)
-        return ((c_1 + c_2) * self.duration * self.MIN_K)
+        return ((self.WLK_K_1 * self.weight
+                + (self.get_mean_speed()**2 // self.height)
+                * self.WLK_K_2
+                * self.weight) * self.duration * self.MIN_K)
 
 
 @dataclass
@@ -108,15 +107,15 @@ def read_package(workout_type: str, data: list) -> Training:
     workout_dict = {
         'RUN': Running,
         'SWM': Swimming,
-        'WLK': SportsWalking}
+        'WLK': SportsWalking
+    }
     if workout_type not in workout_dict:
         raise KeyError(
-            f'Неверный тип тренировки. '
+            'Неверный тип тренировки. '
             f'Корректные виды тренировок: RUN, SWM, WLK. '
             f'Выбранный Вами: {workout_type}.'
         )
-    else:
-        return workout_dict.get(workout_type)(*data)
+    return workout_dict.get(workout_type)(*data)
 
 
 def main(training: Training) -> None:
